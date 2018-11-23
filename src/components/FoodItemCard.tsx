@@ -27,7 +27,6 @@ export default class FoodItemCard extends React.Component<IProps, IState> {
             uploadFileList: null
         }
         this.handleExpandClick = this.handleExpandClick.bind(this)
-        this.handleFileUpload = this.handleFileUpload.bind(this)
         this.editFood = this.editFood.bind(this)
     }
 
@@ -59,11 +58,6 @@ export default class FoodItemCard extends React.Component<IProps, IState> {
         return splitted[0] + ' ' + splitted[2] + ' ' + splitted[1] + ' ' + splitted[3];
     }
 
-    private handleFileUpload(fileList: any) {
-        this.setState({
-            uploadFileList: fileList.target.files
-        })
-    }
 
     private deleteFood(id: any) {
         const url = "https://foodandrecipesapi.azurewebsites.net/api/Food/" + id
