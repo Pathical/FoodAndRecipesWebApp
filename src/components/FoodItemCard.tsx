@@ -3,105 +3,234 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import * as React from 'react';
-import { CardMedia, CardHeader, CardActions, Collapse, IconButton } from '@material-ui/core';
+import { CardMedia, CardActions, Collapse, IconButton, Icon } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Modal from 'react-responsive-modal';
 
-
-interface IState {
-    expanded: any
+interface IProps {
+    currentFood: any
 }
 
-export default class FoodItemCard extends React.Component<{ foodItem: any } , IState> {
+interface IState {
+    open: boolean,
+    expanded: any,
+    uploadFileList: any
+}
+
+export default class FoodItemCard extends React.Component<IProps, IState> {
 
     constructor(props: any) {
         super(props)
         this.state = {
-          expanded: false
+            open: false,
+            expanded: false,
+            uploadFileList: null
         }
-        this.handleExpandClick=this.handleExpandClick.bind(this);
+        this.handleExpandClick = this.handleExpandClick.bind(this)
+        this.handleFileUpload = this.handleFileUpload.bind(this)
+        this.editFood = this.editFood.bind(this)
     }
 
-
-    public handleExpandClick(){
-      this.setState({expanded: !this.state.expanded})
+    public handleExpandClick() {
+        this.setState({ expanded: !this.state.expanded })
     };
 
     // This method gets the image which represents the food item
     public getIcon(): string {
-        return this.props.foodItem.url ;
+        return this.props.currentFood.url;
     }
+
+    // Modal Open
+    private onOpenModal = () => {
+        this.setState({ open: true });
+    };
+
+    // Modal Close
+    private onCloseModal = () => {
+        this.setState({ open: false });
+    };
 
     // Takes a string representation of a date (from the RESTful api)
     // Creates a new Date object
     // Take only the necessary parts of the Date object
-    public convertDate(arg: string): string{
-        const converted = new Date(arg);        const splitted = converted.toDateString().split(' ');
+    public convertDate(arg: any): string {
+        const converted = new Date(arg);
+        const splitted = converted.toDateString().split(' ');
         return splitted[0] + ' ' + splitted[2] + ' ' + splitted[1] + ' ' + splitted[3];
+    }
+
+    private handleFileUpload(fileList: any) {
+        this.setState({
+            uploadFileList: fileList.target.files
+        })
+    }
+
+    private deleteFood(id: any) {
+        const url = "https://foodandrecipesapi.azurewebsites.net/api/Food/" + id
+
+        fetch(url, {
+            method: 'DELETE'
+        })
+            .then((response: any) => {
+                if (!response.ok) {
+                    // Error Response
+                    alert(response.statusText)
+                }
+                else {
+                    location.reload()
+                }
+            })
     }
 
     // This render function helps create a Card from material UI
     // Shows weather information for a particular date
     public render() {
+        const currentFood = this.props.currentFood
+        const { open } = this.state;
         return (
-            <Card  style={{ maxWidth: 400 }}>
-                <CardHeader 
-                    title="Name of the food"
-                    subheader = "date of when the food was posted"
-                />
-                <CardMedia
-                    style={{ height: 0, paddingTop: '56.25%' }}
-                    image="/static/images/cards/paella.jpg"
-                    title="Name of the food"
-                />
-                <CardContent>
-                    <Typography component="p" style={{fontSize: "1em"}}>
-                        This impressive paella is a perfect party dish and a fun meal to cook together with your
-                        guests. Add 1 cup of frozen peas along with the mussels, if you like.
+            <div>
+                <Card style={{ maxWidth: 400 }}>
+                    <Typography style={{ fontSize: "2em", marginLeft: "10px" }}>
+                        {currentFood.name}
                     </Typography>
-                </CardContent>
+                    <Typography style={{ fontSize: "1em", marginLeft: "10px" }}>
 
-                <CardActions style={{ display: 'flex'}}>
-                    <IconButton
-                        style={this.state.expanded ? {transform: 'rotate(180deg)'} : {transform: 'rotate(0deg)'}}
-
-                        onClick={this.handleExpandClick}
-                        aria-label="Show more"
-                    >
-                        <ExpandMoreIcon />
-                    </IconButton>
-                </CardActions>
-
-                <Collapse in={this.state.expanded} timeout="auto" unmountOnExit={true}>
+                        {currentFood.uploaded}
+                    </Typography>
+                    <CardMedia
+                        style={{ height: 0, paddingTop: '56.25%' }}
+                        image={currentFood.url}
+                        title={currentFood.name}
+                    />
                     <CardContent>
-                        <Typography paragraph={true}>Method:</Typography>
-                        <Typography paragraph={true} style={{fontSize: "1em"}}>
-                        Heat 1/2 cup of the broth in a pot until simmering, add saffron and set aside for 10
-                        minutes.
-                        </Typography>
-                        <Typography paragraph={true} style={{fontSize: "1em"}}>
-                        Heat oil in a (14- to 16-inch) paella pan or a large, deep skillet over medium-high
-                        heat. Add chicken, shrimp and chorizo, and cook, stirring occasionally until lightly
-                        browned, 6 to 8 minutes. Transfer shrimp to a large plate and set aside, leaving
-                        chicken and chorizo in the pan. Add pimentón, bay leaves, garlic, tomatoes, onion,
-                        salt and pepper, and cook, stirring often until thickened and fragrant, about 10
-                        minutes. Add saffron broth and remaining 4 1/2 cups chicken broth; bring to a boil.
-                        </Typography>
-                        <Typography paragraph={true} style={{fontSize: "1em"}}>
-                        Add rice and stir very gently to distribute. Top with artichokes and peppers, and cook
-                        without stirring, until most of the liquid is absorbed, 15 to 18 minutes. Reduce heat
-                        to medium-low, add reserved shrimp and mussels, tucking them down into the rice, and
-                        cook again without stirring, until mussels have opened and rice is just tender, 5 to 7
-                        minutes more. (Discard any mussels that don’t open.)
-                        </Typography>
-                        <Typography style={{fontSize: "1em"}}>
-                        Set aside off of the heat to let rest for 10 minutes, and then serve.
+                        <Typography component="p" style={{ fontSize: "1em" }}>
+                            {currentFood.description}
                         </Typography>
                     </CardContent>
-                </Collapse>
-            
 
+                    <CardActions style={{ display: 'flex' }}>
+                        <IconButton
+                            style={this.state.expanded ? { transform: 'rotate(180deg)' } : { transform: 'rotate(0deg)' }}
 
-            </Card>
+                            onClick={this.handleExpandClick}
+                            aria-label="Show more"
+                        >
+                            <ExpandMoreIcon />
+                        </IconButton>
+
+                        <IconButton onClick={this.onOpenModal}>
+                            <Icon className="far fa-edit" />
+                        </IconButton>
+
+                        <IconButton onClick={this.deleteFood.bind(this, currentFood.id)}>
+                            <Icon className="far fa-trash-alt" />
+                        </IconButton>
+
+                    </CardActions>
+
+                    <Collapse in={this.state.expanded} timeout="auto" unmountOnExit={true}>
+                        <CardContent>
+                            <Typography paragraph={true} style={{ fontSize: "1.5em" }}>Ingredients:</Typography>
+                            <Typography paragraph={true} style={{ fontSize: "1em" }}>
+                                {currentFood.ingredients}
+                            </Typography>
+                            <Typography paragraph={true} style={{ fontSize: "1.5em" }}> Instructions:</Typography>
+                            <Typography paragraph={true} style={{ fontSize: "1em" }}>
+                                {currentFood.instructions}
+                            </Typography>
+                        </CardContent>
+                    </Collapse>
+                </Card>
+
+                <Modal open={open} onClose={this.onCloseModal}>
+                    <form>
+                        <div className="form-group">
+                            <label>Name of the Food</label>
+                            <input type="text" className="form-control" id="food-edit-name-input" value={currentFood.Name} />
+                            <small className="form-text text-muted">You can edit any food/recipe later</small>
+                        </div>
+                        <div className="form-group">
+                            <label>Tag</label>
+                            <input type="text" className="form-control" id="food-edit-tag-input" value={currentFood.Tag} />
+                            <small className="form-text text-muted">Tag is used for searching</small>
+                        </div>
+                        <div className="form-group">
+                            <label>Description</label>
+                            <input type="text" className="form-control" id="food-edit-description-input" value={currentFood.Description} />
+                            <small className="form-text text-muted">You can edit any food/recipe later</small>
+                        </div>
+                        <div className="form-group">
+                            <label>Ingredients</label>
+                            <input type="text" className="form-control" id="food-edit-ingredients-input" value={currentFood.Ingredients} />
+                            <small className="form-text text-muted">You can edit any food/recipe later</small>
+                        </div>
+                        <div className="form-group">
+                            <label>Instructions</label>
+                            <input type="text" className="form-control" id="food-edit-instructions-input" value={currentFood.Instructions} />
+                            <small className="form-text text-muted">You can edit any food/recipe later</small>
+                        </div>
+                        <button type="button" className="btn" onClick={this.editFood}>Upload</button>
+                    </form>
+                </Modal>
+            </div>
         );
+    }
+
+    private editFood() {
+        const nameInput = document.getElementById("food-edit-name-input") as HTMLInputElement
+        const tagInput = document.getElementById("food-edit-tag-input") as HTMLInputElement
+        const descriptionInput = document.getElementById("food-edit-description-input") as HTMLInputElement
+        const ingredientsInput = document.getElementById("food-edit-ingredients-input") as HTMLInputElement
+        const instructionsInput = document.getElementById("food-edit-instructions-input") as HTMLInputElement
+
+        if (nameInput === null || tagInput === null) {
+            return;
+        }
+
+        const url = "https://foodandrecipesapi.azurewebsites.net/api/food/" + this.props.currentFood.id
+        const updatedName = nameInput.value
+        const updatedTag = tagInput.value
+        const updatedDescription = descriptionInput.value
+        const updatedIngredients = ingredientsInput.value
+        const updatedInstructions = instructionsInput.value
+
+        let dataBody = {}
+        if (this.state.uploadFileList != null) {
+            const imageFile = this.state.uploadFileList[0]
+            dataBody = {
+                FoodItemId: this.props.currentFood.id,
+                Name: updatedName,
+                Tags: updatedTag,
+                Description: updatedDescription,
+                Ingredients: updatedIngredients,
+                Instructions: updatedInstructions,
+                image: imageFile
+            }
+        } else {
+            dataBody = {
+                FoodItemId: this.props.currentFood.id,
+                Name: updatedName,
+                Tags: updatedTag,
+                Description: updatedDescription,
+                Ingredients: updatedIngredients,
+                Instructions: updatedInstructions
+            }
+        }
+
+
+
+        fetch(url, {
+            body: JSON.stringify(dataBody),
+            headers: { 'cache-control': 'no-cache', 'Content-Type': 'application/json' },
+            method: 'PUT'
+        })
+            .then((response: any) => {
+                if (!response.ok) {
+                    // Error State
+                    alert(response.statusText + " " + url)
+                } else {
+                    location.reload()
+                }
+            })
     }
 }

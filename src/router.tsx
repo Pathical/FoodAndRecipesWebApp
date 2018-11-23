@@ -16,8 +16,10 @@ export const AppRouter: React.StatelessComponent<{}> = () => {
 
         <BrowserRouter>
             <div>
-                <Header />
-                <main>
+                <div>
+                    <Header />
+                </div>
+                <main >
                     <Route exact={true} path="/" component={App} />
                     <Redirect from='*' to='/' />
                 </main>
